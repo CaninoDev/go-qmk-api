@@ -1,13 +1,12 @@
-// Package go-qmk-api provides a Go wrapper to QMK's asynchronous API that Web and GUI tools can use to compile
-// arbitrary keymaps for any keyboard supported by QMK.
+// Package qmk provides a Go wrapper to QMK's asynchronous API that Web and GUI tools can use to compile arbitrary keymaps for any keyboard supported by QMK.
 package qmk
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 /* v1 Endpoints
@@ -49,13 +48,14 @@ var httpClient = &http.Client{
 	Timeout: time.Second * 2,
 }
 
+// Status represents the QMK API's operating status
 type Status struct {
-	Result		string		`json:"result",omitempty`
-	Children	[]string	`json:"children",omitempty`
-	LastPing	string		`json:"last_ping"`
-	QueueLength	int			`json:"queue_length"`
-	Status		string		`json:"status"`
-	Version		string		`json:"version"`
+	Result      string   `json:"result,omitempty"`
+	Children    []string `json:"children,omitempty"`
+	LastPing    string   `json:"last_ping"`
+	QueueLength int      `json:"queue_length"`
+	Status      string   `json:"status"`
+	Version     string   `json:"version"`
 }
 
 // CurrentStatus returns QMK API server status
@@ -92,7 +92,7 @@ func Update() (Status, error) {
 
 	rawJSON, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return body ,err
+		return body, err
 	}
 	err = json.Unmarshal(rawJSON, &body)
 	if err != nil {
@@ -102,7 +102,35 @@ func Update() (Status, error) {
 	return body, nil
 }
 
-// TODO: /v1/converters
+// Converters returns a list of supported format converters
+func Converters() ([]string, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s", qmkAPI, version, "converters")
+	var bodyRaw map[string][]interface{}
+	var body []string
+	var rawJSON json.RawMessage
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return body, err
+	}
+
+	rawJSON, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
+	err = json.Unmarshal(rawJSON, &bodyRaw)
+	if err != nil {
+		return body, err
+	}
+
+	body = make([]string, len(bodyRaw["children"]))
+	for i, interf := range bodyRaw["children"] {
+		body[i] = interf.(string)
+	}
+
+	return body, nil
+}
+
 // TODO: /v1/converters/kle2qmk
 // TODO: /v1/converters/kle
 // TODO: /v1/keyboards
@@ -121,4 +149,3 @@ func Update() (Status, error) {
 // TODO: /v1/compile/<string:job_id>/hex
 // TODO: /v1/compile/<string:job_id>/keymap
 // TODO: /v1/compile/<string:job_id>/source
-
