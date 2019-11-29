@@ -1,0 +1,55 @@
+
+### Status
+GET https://api.qmk.fm/v1
+Accept: application/json
+### Trigger Update
+GET https://api.qmk.fm/v1/update
+Accept: application/json
+### List oof converter
+GET https://api.qmk.fm/v1/converters
+Accept: application/json
+### List of keyboards
+GET https://api.qmk.fm/v1/keyboards
+Accept: application/json
+### List of all keyboards' data
+GET https://api.qmk.fm/v1/keyboards/all
+Accept: application/json
+### Data of a keyboard
+GET https://api.qmk.fm/v1/keyboards/{{keyboard}}
+Accept: application/json
+### Readme of a keyboard
+GET https://api.qmk.fm/v1/keyboards/{{keyboard}}/readme
+Accept: application/json
+### Details of a keyboard's keymap
+GET https://api.qmk.fm/v1/keyboards/{{keyboard}}/keymaps/{{keymap}}
+Accept: application/json
+### Readme of a keyboards' keymap's readme
+GET https://api.qmk.fm/v1/keyboards/{{keyboard}}/keymaps/{{keymap}}/readme
+Accept: application/json
+### Dictionary keyboard/layout pairs and their build status
+GET https://api.qmk.fm/v1/keyboards/build_status
+Accept: application/json
+### Dictionary keyboard/layout pairs and their build log
+GET https://api.qmk.fm/v1/keyboards/build_log
+Accept: application/json
+### Error log of the last run
+GET https://api.qmk.fm/v1/keyboards/error_log
+Accept: application/json
+### List of USB device indentifiers supported by qmk
+GET https://api.qmk.fm/v1/usb
+Accept: application/json
+### Status of a compile job
+GET https://api.qmk.fm/v1/compile/{{jobID}}
+Accept: application/json
+### Download a compiled firmware
+GET https://api.qmk.fm/v1/compile/{{jobID}}/download
+Accept: application/octet-stream
+### Download a compiled firmware
+GET https://api.qmk.fm/v1/compile/{{jobID}}/hex
+Accept: application/octet-stream
+### Keymap for a completed compile job
+GET https://api.qmk.fm/v1/compile/{{jobID}}>/keymap
+Accept: application/json
+### Full source for a completed compile job
+GET https://api.qmk.fm/v1/compile/{{jobID}}/source
+Accept: application/zip

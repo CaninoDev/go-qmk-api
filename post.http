@@ -1,0 +1,15 @@
+### Convert a kle layout to qmk
+POST https://api.qmk.fm/v1/converters/kle2qmk
+Content-Type: application/json
+
+{
+  "id": 999,
+  "value": "content"
+}
+Accept: application/json
+### Convert a kle layout to qmk
+POST https://api.qmk.fm/v1/converters/kle
+Accept: application/json
+###
+POST https://api.qmk.fm/v1/compile
+Accept: application/json
