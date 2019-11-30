@@ -3,6 +3,7 @@ package qmk
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -101,6 +102,10 @@ type Keyboard struct {
 type KeyboardsCollection struct {
 	LastUpdated string `json:"last_updated"`
 	Keyboards   map[string]Keyboard
+}
+
+type errMessage struct {
+	Message string
 }
 
 // CurrentStatus returns QMK API server status
@@ -234,6 +239,35 @@ func KeyboardsData() (KeyboardsCollection, error) {
 			msg = err.Error()
 		}
 		glog.Warning(msg)
+	}
+
+	return body, nil
+}
+
+//KeyboardData returns information about the specified keyboard.
+func KeyboardData(keyboard string) (Keyboard, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "keyboards", keyboard)
+	var body Keyboard
+	var rawJSON json.RawMessage
+	var errMsg errMessage
+
+	resp, err := http.Get(queryQMK)
+	if resp.StatusCode == 404 {
+		msg, _ := ioutil.ReadAll(resp.Body)
+		_ = json.Unmarshal(msg, &errMsg)
+		return body, errors.New(errMsg.Message)
+	}
+	if err != nil {
+		return body, err
+	}
+
+	rawJSON, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
+	err = json.Unmarshal(rawJSON, &body)
+	if err != nil {
+		return body, err
 	}
 
 	return body, nil
