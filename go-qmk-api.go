@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 /* v1 Endpoints
@@ -50,12 +52,55 @@ var httpClient = &http.Client{
 
 // Status represents the QMK API's operating status
 type Status struct {
-	Result      string   `json:"result,omitempty"`
+	Result      bool     `json:"result,omitempty"`
 	Children    []string `json:"children,omitempty"`
 	LastPing    string   `json:"last_ping"`
 	QueueLength int      `json:"queue_length"`
 	Status      string   `json:"status"`
 	Version     string   `json:"version"`
+}
+
+// Mapping represent a key's coordinate and orientation on the board's matrix
+type Mapping struct {
+	Label string  `json:"label,omitempty"`
+	X     float32 `json:"x,omitempty"`
+	Y     float32 `json:"y,omitempty"`
+	H     float32 `json:"h,omitempty"`
+	W     float32 `json:"w,omitempty"`
+}
+
+// Layout represent a particular layout mapping and key count
+type Layout struct {
+	KeyCount int       `json:"key_count"`
+	Mapping  []Mapping `json:"layout"`
+}
+
+// Keyboard represent information about a keyboard
+type Keyboard struct {
+	BootLoader     string `json:"bootloader,omitempty"`
+	Description    string
+	Keymaps        []string          `json:"keymaps"`
+	Identifiers    string            `json:"identifiers"`
+	Layouts        map[string]Layout `json:"layouts"`
+	URL            string            `json:"url"`
+	Height         float32           `json:"height"`
+	Width          float32           `json:"width"`
+	Readme         bool              `json:"readme"`
+	VendorID       string            `json:"vendor_id"`
+	Processor      string            `json:"processor"`
+	ProcessorType  string            `json:"processor_type"`
+	DeviceVersion  string            `json:"device_version"`
+	Manufacturer   string            `json:"manufacturer"`
+	ProductID      string            `json:"product_id"`
+	Maintainer     string            `json:"maintainer"`
+	KeyboardFolder string            `json:"keyboard_folder"`
+	Platform       string            `json:"platform"`
+}
+
+// KeyboardsCollection represents information about all keyboards
+type KeyboardsCollection struct {
+	LastUpdated string `json:"last_updated"`
+	Keyboards   map[string]Keyboard
 }
 
 // CurrentStatus returns QMK API server status
@@ -133,8 +178,67 @@ func Converters() ([]string, error) {
 
 // TODO: /v1/converters/kle2qmk
 // TODO: /v1/converters/kle
-// TODO: /v1/keyboards
-// TODO: /v1/keyboards/all
+
+// KeyboardsList returns a list of supported keyboards
+func KeyboardsList() ([]string, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s", qmkAPI, version, "keyboards")
+	var body []string
+	var rawJSON json.RawMessage
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return body, err
+	}
+
+	rawJSON, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
+	err = json.Unmarshal(rawJSON, &body)
+	if err != nil {
+		return body, err
+	}
+
+	return body, nil
+}
+
+// KeyboardsData returns a list of keyboards and its specifications
+func KeyboardsData() (KeyboardsCollection, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s", qmkAPI, version, "keyboards/all")
+	var body KeyboardsCollection
+	var rawJSON json.RawMessage
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return body, err
+	}
+
+	rawJSON, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
+
+	err = json.Unmarshal(rawJSON, &body)
+	if err != nil {
+		var msg string
+		switch t := err.(type) {
+		case *json.SyntaxError:
+			jsn := string(rawJSON[0:t.Offset])
+			jsn += "<--(Invalid Character)"
+			msg = fmt.Sprintf("Invalid Character at offset %v\n %s", t.Offset, jsn)
+		case *json.UnmarshalTypeError:
+			jsn := string(rawJSON[0:t.Offset])
+			jsn += " <--(Invalid Type) "
+			msg = fmt.Sprintf("Invalid Type at offset %v\n %s", t.Offset, jsn)
+		default:
+			msg = err.Error()
+		}
+		glog.Warning(msg)
+	}
+
+	return body, nil
+}
+
 // TODO: /v1/keyboards/<path:keyboard>
 // TODO: /v1/keyboards/<path:keyboard>/readme
 // TODO: /v1/keyboards/<path:keyboard>/keymaps/<string:keymap>

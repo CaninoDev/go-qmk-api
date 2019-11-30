@@ -46,3 +46,27 @@ func TestConverters(t *testing.T) {
 	}
 
 }
+
+func TestKeyboardsList(t *testing.T) {
+	i, err := KeyboardsList()
+
+	if reflect.TypeOf(i) != reflect.TypeOf([]string{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf([]string{}))
+	}
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestKeyboardsData(t *testing.T) {
+	i, err := KeyboardsData()
+
+	if reflect.TypeOf(i) != reflect.TypeOf(KeyboardsCollection{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf(KeyboardsCollection{}))
+	}
+
+	if err != nil {
+		t.Error(err)
+	}
+}
