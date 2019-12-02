@@ -118,14 +118,22 @@ type BuildStatus struct {
 	KeyboardLayout map[string]bool
 }
 
+// BuildLog represents a mapping of each keyboard's layout's to their respective logs
 type BuildLog struct {
 	KeyboardLayout map[string]KeyboardLog
 }
 
+// KeyboardLog represents the log of a particular keyboard's layout's
 type KeyboardLog struct {
 	Works      bool
 	LastTested string `json:"last_tested"`
 	Message    string `json:"message"`
+}
+
+// ErrorLog represents the various warnings and errors resulting from a keyboard's layout's
+type ErrorLog struct {
+	Message  string
+	Severity string
 }
 
 type errMessage struct {
@@ -407,7 +415,27 @@ func LayoutBuildLog() (BuildLog, error) {
 	return buildLog, err
 }
 
-// TODO: /v1/keyboards/build_log
+// ErrorLogs return an array of error logs resulting from compilation of a keyboard's layout
+func ErrorLogs() ([]ErrorLog, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "keyboards", "error_log")
+	var errorLogs []ErrorLog
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return errorLogs, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errorLogs, err
+	}
+
+	err = json.Unmarshal(rawJSON, &errorLogs)
+
+	return errorLogs, err
+}
+
 // TODO: /v1/keyboards/error_log
 // TODO: /v1/usb
 // TODO: /v1/compile

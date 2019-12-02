@@ -267,3 +267,15 @@ func TestLayoutBuildLog(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestErrorLogs(t *testing.T) {
+	i, err := ErrorLogs()
+
+	if reflect.TypeOf(i) != reflect.TypeOf([]ErrorLog{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf([]ErrorLog{}))
+	}
+
+	if err != nil {
+		t.Error(err)
+	}
+}
