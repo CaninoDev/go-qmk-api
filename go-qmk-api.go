@@ -12,36 +12,37 @@ import (
 	"github.com/golang/glog"
 )
 
-/* v1 Endpoints
-/v1																GET		Returns the API's Status
-/v1/update														GET 	Trigger an update of the API
-/v1/converters													GET 	Return the list of converters we support
-/v1/converters/kle2qmk											POST 	Convert a KLE layout to QMK's layout format
-/v1/converters/kle
-/v1/keyboards													GET		Return a list of keyboards
-/v1/keyboards/all												GET     Return JSON showing all data of all keyboards
-/v1/keyboards/<path:keyboard>									GET		Return JSON showing data about a board
-/v1/keyboards/<path:keyboard>/readme							GET		Returns the readme for a keyboard
-/v1/keyboards/<path:keyboard>/keymaps/<string:keymap>			GET		Return JSON showing data about a board's keymap
-/v1/keyboards/<path:keyboard>/keymaps/<string:keymap>/readme	GET		Returns the readme for a keymap
-/v1/keyboards/build_status										GET		Returns a dictionary of keyboard/layout pairs.
-																		Each entry is True if the keyboard works in
-																		configurator and false if it doesn't
-/v1/keyboards/build_log											GET		Returns a dictionary of keyboard/layout pairs.
-																		Each entry is a dictionary with the following
-																		keys:
-																		works bool
-																		message string
-/v1/keyboards/error_log											GET		Return the error log from the last run
-/v1/usb															GET		Returns the list of USB device identifiers used
-																		in QMK
-/v1/compile														POST	Enqeue a compile job
-/v1/compile/<string:job_id>										GET		Fetch the status of a compile job
-/v1/compile/<string:job_id>/download							GET		Download a compiled firmware
-/v1/compile/<string:job_id>/hex
-/v1/compile/<string:job_id>/keymap								GET		Download the keymap for a completed compile job
-/v1/compile/<string:job_id>/source								GET		Download the full source for a completed compile
-																		job
+/*
+v1 Endpoints
+	/v1																GET		Returns the API's Status
+	/v1/update														GET 	Trigger an update of the API
+	/v1/converters													GET 	Return the list of converters we support
+	/v1/converters/kle2qmk											POST 	Convert a KLE layout to QMK's layout format
+	/v1/converters/kle
+	/v1/keyboards													GET		Return a list of keyboards
+	/v1/keyboards/all												GET     Return JSON showing all data of all keyboards
+	/v1/keyboards/<path:keyboard>									GET		Return JSON showing data about a board
+	/v1/keyboards/<path:keyboard>/readme							GET		Returns the readme for a keyboard
+	/v1/keyboards/<path:keyboard>/keymaps/<string:keymap>			GET		Return JSON showing data about a board's keymap
+	/v1/keyboards/<path:keyboard>/keymaps/<string:keymap>/readme	GET		Returns the readme for a keymap
+	/v1/keyboards/build_status										GET		Returns a dictionary of keyboard/layout pairs.
+																			Each entry is True if the keyboard works in
+																			configurator and false if it doesn't
+	/v1/keyboards/build_log											GET		Returns a dictionary of keyboard/layout pairs.
+																			Each entry is a dictionary with the following
+																			keys:
+																			works bool
+																			message string
+	/v1/keyboards/error_log											GET		Return the error log from the last run
+	/v1/usb															GET		Returns the list of USB device identifiers used
+																			in QMK
+	/v1/compile														POST	Enqeue a compile job
+	/v1/compile/<string:job_id>										GET		Fetch the status of a compile job
+	/v1/compile/<string:job_id>/download							GET		Download a compiled firmware
+	/v1/compile/<string:job_id>/hex
+	/v1/compile/<string:job_id>/keymap								GET		Download the keymap for a completed compile job
+	/v1/compile/<string:job_id>/source								GET		Download the full source for a completed compile
+																			job
 */
 
 const qmkAPI = "https://api.qmk.fm"
@@ -78,9 +79,9 @@ type Layout struct {
 
 // Keyboard represent information about a keyboard
 type Keyboard struct {
-	BootLoader     string `json:"bootloader,omitempty"`
-	Description    string
-	Keymaps        []string          `json:"keymaps"`
+	BootLoader     string            `json:"bootloader,omitempty"`
+	Description    string            `json:"description,omitempty"`
+	Keymaps        map[string]Keymap `json:"keymaps"`
 	Identifiers    string            `json:"identifiers"`
 	Layouts        map[string]Layout `json:"layouts"`
 	URL            string            `json:"url"`
@@ -102,6 +103,29 @@ type Keyboard struct {
 type KeyboardsCollection struct {
 	LastUpdated string `json:"last_updated"`
 	Keyboards   map[string]Keyboard
+}
+
+// Keymap represents information about a specific keyboard's keymap
+type Keymap struct {
+	Layers     []string `json:"layer,omitempty"`
+	Name       string   `json:"keymap_name,omitempty"`
+	Layout     string   `json:"layout_macro,omitempty"`
+	FolderName string   `json:"folder_name,omitempty"`
+}
+
+// BuildStatus represents a list of keyboards and their build status against QMK compilation
+type BuildStatus struct {
+	KeyboardLayout map[string]bool
+}
+
+type BuildLog struct {
+	KeyboardLayout map[string]KeyboardLog
+}
+
+type KeyboardLog struct {
+	Works      bool
+	LastTested string `json:"last_tested"`
+	Message    string `json:"message"`
 }
 
 type errMessage struct {
@@ -273,11 +297,116 @@ func KeyboardData(keyboard string) (Keyboard, error) {
 	return body, nil
 }
 
-// TODO: /v1/keyboards/<path:keyboard>
-// TODO: /v1/keyboards/<path:keyboard>/readme
-// TODO: /v1/keyboards/<path:keyboard>/keymaps/<string:keymap>
-// TODO: /v1/keyboards/<path:keyboard>/keymaps/<string:keymap>/readme
-// TODO: /v1/keyboards/build_status
+// KeyboardReadme returns a specified keyboard's readme
+func KeyboardReadme(keyboard string) ([]byte, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s/%s", qmkAPI, version, "keyboards", keyboard, "readme")
+	var rawBlob []byte
+
+	resp, err := http.Get(queryQMK)
+	if resp.StatusCode == 500 {
+		return rawBlob, errors.New("Keyboard Not Found")
+	}
+	if err != nil {
+		return rawBlob, err
+	}
+	defer resp.Body.Close()
+
+	rawBlob, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return rawBlob, err
+	}
+
+	return rawBlob, nil
+}
+
+// KeymapData returns data about the specified keyboard's keymap
+func KeymapData(keyboard string, keymap string) (Keymap, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s/%s/%s", qmkAPI, version, "keyboards", keyboard, "keymaps", keymap)
+	var keyMap Keymap
+
+	resp, err := http.Get(queryQMK)
+	if resp.StatusCode == 404 {
+		return keyMap, errors.New("Keyboard Not Found")
+	}
+	if err != nil {
+		return keyMap, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return keyMap, err
+	}
+
+	err = json.Unmarshal(rawJSON, &keyMap)
+
+	return keyMap, nil
+}
+
+// KeymapReadme returns a specified keyboard's keymap's readme
+func KeymapReadme(keyboard string, keymap string) ([]byte, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", qmkAPI, version, "keyboards", keyboard, "keymaps", keymap, "readme")
+	var rawBlob []byte
+
+	resp, err := http.Get(queryQMK)
+	if resp.StatusCode == 500 {
+		return rawBlob, errors.New("Keyboard or Keymap Not Found")
+	}
+	if err != nil {
+		return rawBlob, err
+	}
+	defer resp.Body.Close()
+
+	rawBlob, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return rawBlob, err
+	}
+
+	return rawBlob, nil
+}
+
+// KeyboardLayoutBuildStatus returns a list of keyboard and their respective layouts build status against QMK compilation
+func KeyboardLayoutBuildStatus() (BuildStatus, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "keyboards", "build_status")
+	var buildStatus BuildStatus
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return buildStatus, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return buildStatus, err
+	}
+
+	err = json.Unmarshal(rawJSON, &buildStatus)
+
+	return buildStatus, err
+}
+
+// LayoutBuildLog returns every keyboard's layout's build log
+func LayoutBuildLog() (BuildLog, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "keyboards", "build_log")
+	var buildLog BuildLog
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return buildLog, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return buildLog, err
+	}
+
+	err = json.Unmarshal(rawJSON, &buildLog)
+
+	return buildLog, err
+}
+
 // TODO: /v1/keyboards/build_log
 // TODO: /v1/keyboards/error_log
 // TODO: /v1/usb

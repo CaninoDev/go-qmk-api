@@ -3,6 +3,7 @@ package qmk
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"reflect"
 	"testing"
 )
@@ -98,5 +99,171 @@ func TestKeyboardData(t *testing.T) {
 				t.Errorf("KeyboardData() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestKeyboardReadme(t *testing.T) {
+	var empty []byte
+	readme, _ := ioutil.ReadFile("plaid_readme_test")
+
+	type args struct {
+		keyboard string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "Plaid",
+			args: args{
+				keyboard: "plaid",
+			},
+			want:    readme,
+			wantErr: false,
+		},
+		{
+			name: "Nonens",
+			args: args{
+				keyboard: "Nonens",
+			},
+			want:    empty,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := KeyboardReadme(tt.args.keyboard)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("KeyboarReadme() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("KeyboardReadme() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKeymapData(t *testing.T) {
+	var plaidKb Keymap
+	wantKb := []byte(`{"git_hash":"f0991420040b8c43529bd1d863c1987fcb8850e4","last_updated":"2019-11-30 13:05:20 UTC","keyboards":{"plaid":{"processor":"atmega328p","keyboard_name":"Plaid // Through Hole","vendor_id":"0x16C0","width":12,"product_id":"0x27DB","device_ver":"0x0002","manufacturer":"dm9records","readme":true,"platform":"unknown","description":"12x4 ortholinear keyboard with through hole components","maintainer":"hsgw","keymaps":{"thehalfdeafchef":{"layers":[],"keymap_name":"thehalfdeafchef","keyboard_name":"plaid","layout_macro":"LAYOUT_planck_mit","keymap_folder":"qmk_firmware/keyboards/plaid/keymaps"}},"keyboard_folder":"plaid","processor_type":"avr","url":"https://github.com/hsgw/plaid","layouts":{"LAYOUT_ortho_4x12":{"layout":[{"y":0,"x":0,"w":1},{"y":0,"x":1,"w":1},{"y":0,"x":2,"w":1},{"y":0,"x":3,"w":1},{"y":0,"x":4,"w":1},{"y":0,"x":5,"w":1},{"y":0,"x":6,"w":1},{"y":0,"x":7,"w":1},{"y":0,"x":8,"w":1},{"y":0,"x":9,"w":1},{"y":0,"x":10,"w":1},{"y":0,"x":11,"w":1},{"y":1,"x":0,"w":1},{"y":1,"x":1,"w":1},{"y":1,"x":2,"w":1},{"y":1,"x":3,"w":1},{"y":1,"x":4,"w":1},{"y":1,"x":5,"w":1},{"y":1,"x":6,"w":1},{"y":1,"x":7,"w":1},{"y":1,"x":8,"w":1},{"y":1,"x":9,"w":1},{"y":1,"x":10,"w":1},{"y":1,"x":11,"w":1},{"y":2,"x":0,"w":1},{"y":2,"x":1,"w":1},{"y":2,"x":2,"w":1},{"y":2,"x":3,"w":1},{"y":2,"x":4,"w":1},{"y":2,"x":5,"w":1},{"y":2,"x":6,"w":1},{"y":2,"x":7,"w":1},{"y":2,"x":8,"w":1},{"y":2,"x":9,"w":1},{"y":2,"x":10,"w":1},{"y":2,"x":11,"w":1},{"y":3,"x":0,"w":1},{"y":3,"x":1,"w":1},{"y":3,"x":2,"w":1},{"y":3,"x":3,"w":1},{"y":3,"x":4,"w":1},{"y":3,"x":5,"w":1},{"y":3,"x":6,"w":1},{"y":3,"x":7,"w":1},{"y":3,"x":8,"w":1},{"y":3,"x":9,"w":1},{"y":3,"x":10,"w":1},{"y":3,"x":11,"w":1}],"key_count":48},"LAYOUT_plaid_mit":{"layout":[{"y":0,"x":0,"w":1},{"y":0,"x":1,"w":1},{"y":0,"x":2,"w":1},{"y":0,"x":3,"w":1},{"y":0,"x":4,"w":1},{"y":0,"x":5,"w":1},{"y":0,"x":6,"w":1},{"y":0,"x":7,"w":1},{"y":0,"x":8,"w":1},{"y":0,"x":9,"w":1},{"y":0,"x":10,"w":1},{"y":0,"x":11,"w":1},{"y":1,"x":0,"w":1},{"y":1,"x":1,"w":1},{"y":1,"x":2,"w":1},{"y":1,"x":3,"w":1},{"y":1,"x":4,"w":1},{"y":1,"x":5,"w":1},{"y":1,"x":6,"w":1},{"y":1,"x":7,"w":1},{"y":1,"x":8,"w":1},{"y":1,"x":9,"w":1},{"y":1,"x":10,"w":1},{"y":1,"x":11,"w":1},{"y":2,"x":0,"w":1},{"y":2,"x":1,"w":1},{"y":2,"x":2,"w":1},{"y":2,"x":3,"w":1},{"y":2,"x":4,"w":1},{"y":2,"x":5,"w":1},{"y":2,"x":6,"w":1},{"y":2,"x":7,"w":1},{"y":2,"x":8,"w":1},{"y":2,"x":9,"w":1},{"y":2,"x":10,"w":1},{"y":2,"x":11,"w":1},{"y":3,"x":0,"w":1},{"y":3,"x":1,"w":1},{"y":3,"x":2,"w":1},{"y":3,"x":3,"w":1},{"y":3,"x":4,"w":1},{"y":3,"x":5,"w":2},{"y":3,"x":7,"w":1},{"y":3,"x":8,"w":1},{"y":3,"x":9,"w":1},{"y":3,"x":10,"w":1},{"y":3,"x":11,"w":1}],"key_count":47},"KEYMAP":{"layout":[{"y":0,"x":0,"w":1},{"y":0,"x":1,"w":1},{"y":0,"x":2,"w":1},{"y":0,"x":3,"w":1},{"y":0,"x":4,"w":1},{"y":0,"x":5,"w":1},{"y":0,"x":6,"w":1},{"y":0,"x":7,"w":1},{"y":0,"x":8,"w":1},{"y":0,"x":9,"w":1},{"y":0,"x":10,"w":1},{"y":0,"x":11,"w":1},{"y":1,"x":0,"w":1},{"y":1,"x":1,"w":1},{"y":1,"x":2,"w":1},{"y":1,"x":3,"w":1},{"y":1,"x":4,"w":1},{"y":1,"x":5,"w":1},{"y":1,"x":6,"w":1},{"y":1,"x":7,"w":1},{"y":1,"x":8,"w":1},{"y":1,"x":9,"w":1},{"y":1,"x":10,"w":1},{"y":1,"x":11,"w":1},{"y":2,"x":0,"w":1},{"y":2,"x":1,"w":1},{"y":2,"x":2,"w":1},{"y":2,"x":3,"w":1},{"y":2,"x":4,"w":1},{"y":2,"x":5,"w":1},{"y":2,"x":6,"w":1},{"y":2,"x":7,"w":1},{"y":2,"x":8,"w":1},{"y":2,"x":9,"w":1},{"y":2,"x":10,"w":1},{"y":2,"x":11,"w":1},{"y":3,"x":0,"w":1},{"y":3,"x":1,"w":1},{"y":3,"x":2,"w":1},{"y":3,"x":3,"w":1},{"y":3,"x":4,"w":1},{"y":3,"x":5,"w":1},{"y":3,"x":6,"w":1},{"y":3,"x":7,"w":1},{"y":3,"x":8,"w":1},{"y":3,"x":9,"w":1},{"y":3,"x":10,"w":1},{"y":3,"x":11,"w":1}],"key_count":48},"LAYOUT_plaid_grid":{"layout":[{"y":0,"x":0,"w":1},{"y":0,"x":1,"w":1},{"y":0,"x":2,"w":1},{"y":0,"x":3,"w":1},{"y":0,"x":4,"w":1},{"y":0,"x":5,"w":1},{"y":0,"x":6,"w":1},{"y":0,"x":7,"w":1},{"y":0,"x":8,"w":1},{"y":0,"x":9,"w":1},{"y":0,"x":10,"w":1},{"y":0,"x":11,"w":1},{"y":1,"x":0,"w":1},{"y":1,"x":1,"w":1},{"y":1,"x":2,"w":1},{"y":1,"x":3,"w":1},{"y":1,"x":4,"w":1},{"y":1,"x":5,"w":1},{"y":1,"x":6,"w":1},{"y":1,"x":7,"w":1},{"y":1,"x":8,"w":1},{"y":1,"x":9,"w":1},{"y":1,"x":10,"w":1},{"y":1,"x":11,"w":1},{"y":2,"x":0,"w":1},{"y":2,"x":1,"w":1},{"y":2,"x":2,"w":1},{"y":2,"x":3,"w":1},{"y":2,"x":4,"w":1},{"y":2,"x":5,"w":1},{"y":2,"x":6,"w":1},{"y":2,"x":7,"w":1},{"y":2,"x":8,"w":1},{"y":2,"x":9,"w":1},{"y":2,"x":10,"w":1},{"y":2,"x":11,"w":1},{"y":3,"x":0,"w":1},{"y":3,"x":1,"w":1},{"y":3,"x":2,"w":1},{"y":3,"x":3,"w":1},{"y":3,"x":4,"w":1},{"y":3,"x":5,"w":1},{"y":3,"x":6,"w":1},{"y":3,"x":7,"w":1},{"y":3,"x":8,"w":1},{"y":3,"x":9,"w":1},{"y":3,"x":10,"w":1},{"y":3,"x":11,"w":1}],"key_count":48},"LAYOUT_planck_mit":{"layout":[{"y":0,"x":0,"w":1},{"y":0,"x":1,"w":1},{"y":0,"x":2,"w":1},{"y":0,"x":3,"w":1},{"y":0,"x":4,"w":1},{"y":0,"x":5,"w":1},{"y":0,"x":6,"w":1},{"y":0,"x":7,"w":1},{"y":0,"x":8,"w":1},{"y":0,"x":9,"w":1},{"y":0,"x":10,"w":1},{"y":0,"x":11,"w":1},{"y":1,"x":0,"w":1},{"y":1,"x":1,"w":1},{"y":1,"x":2,"w":1},{"y":1,"x":3,"w":1},{"y":1,"x":4,"w":1},{"y":1,"x":5,"w":1},{"y":1,"x":6,"w":1},{"y":1,"x":7,"w":1},{"y":1,"x":8,"w":1},{"y":1,"x":9,"w":1},{"y":1,"x":10,"w":1},{"y":1,"x":11,"w":1},{"y":2,"x":0,"w":1},{"y":2,"x":1,"w":1},{"y":2,"x":2,"w":1},{"y":2,"x":3,"w":1},{"y":2,"x":4,"w":1},{"y":2,"x":5,"w":1},{"y":2,"x":6,"w":1},{"y":2,"x":7,"w":1},{"y":2,"x":8,"w":1},{"y":2,"x":9,"w":1},{"y":2,"x":10,"w":1},{"y":2,"x":11,"w":1},{"y":3,"x":0,"w":1},{"y":3,"x":1,"w":1},{"y":3,"x":2,"w":1},{"y":3,"x":3,"w":1},{"y":3,"x":4,"w":1},{"y":3,"x":5,"w":2},{"y":3,"x":7,"w":1},{"y":3,"x":8,"w":1},{"y":3,"x":9,"w":1},{"y":3,"x":10,"w":1},{"y":3,"x":11,"w":1}],"key_count":47}},"bootloader":"USBasp","height":4,"identifier":"0x16C0:0x27DB:0x0002"}}}`)
+
+	json.Unmarshal(wantKb, &plaidKb)
+
+	type args struct {
+		keyboard string
+		keymap   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Keymap
+		wantErr bool
+	}{
+		{
+			name: "Plaid",
+			args: args{
+				keyboard: "plaid",
+				keymap:   "thehalfdeafchef",
+			},
+			want:    plaidKb,
+			wantErr: false,
+		},
+		{
+			name: "Nonense",
+			args: args{
+				keyboard: "Nonense",
+				keymap:   "ohashoi",
+			},
+			want:    Keymap{},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := KeymapData(tt.args.keyboard, tt.args.keymap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("KeymapData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("KeymapData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKeymapReadme(t *testing.T) {
+	var empty []byte
+	readme, _ := ioutil.ReadFile("plaid_thehalfdeafchef_readme_test")
+
+	type args struct {
+		keyboard string
+		keymap   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "Plaid",
+			args: args{
+				keyboard: "plaid",
+				keymap:   "thehalfdeafchef",
+			},
+			want:    readme,
+			wantErr: false,
+		},
+		{
+			name: "Nonens",
+			args: args{
+				keyboard: "Nonens",
+				keymap:   "none",
+			},
+			want:    empty,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := KeymapReadme(tt.args.keyboard, tt.args.keymap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("KeymapReadme() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("KeymapReadme() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKeyboardLayoutBuildStatus(t *testing.T) {
+	i, err := KeyboardLayoutBuildStatus()
+
+	if reflect.TypeOf(i) != reflect.TypeOf(BuildStatus{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf(BuildStatus{}))
+	}
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestLayoutBuildLog(t *testing.T) {
+	i, err := LayoutBuildLog()
+
+	if reflect.TypeOf(i) != reflect.TypeOf(BuildLog{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf(BuildLog{}))
+	}
+
+	if err != nil {
+		t.Error(err)
 	}
 }
