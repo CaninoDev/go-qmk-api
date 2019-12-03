@@ -292,3 +292,59 @@ func TestUSBTable(t *testing.T) {
 	}
 
 }
+func TestKLE2QMKByGist(t *testing.T) {
+	var keyboard Keyboard
+	var empty Keyboard
+	rawKeyboard := []byte(`{
+		"keyboard_name": "Condensed San Juan", 
+		"url": "", 
+		"maintainer": "qmk", 
+		"width": 16, 
+		"height": 4, 
+		"layouts": {
+			"LAYOUT": {
+				"layout": [{"label":"Esc", "x":0, "y":0}, {"label":"Q", "x":1, "y":0}, {"label":"W", "x":2, "y":0}, {"label":"E", "x":3, "y":0}, {"label":"R", "x":4, "y":0}, {"label":"T", "x":5, "y":0}, {"label":"Y", "x":6, "y":0}, {"label":"U", "x":7, "y":0}, {"label":"I", "x":8, "y":0}, {"label":"O", "x":9, "y":0}, {"label":"P", "x":10, "y":0}, {"label":"{", "x":11, "y":0}, {"label":"}", "x":12, "y":0}, {"label":"~", "x":13, "y":0}, {"x":14, "y":0}, {"x":15, "y":0}, {"label":"Tab", "x":0, "y":1, "w":1.25}, {"label":"A", "x":1.25, "y":1}, {"label":"S", "x":2.25, "y":1}, {"label":"D", "x":3.25, "y":1}, {"label":"F", "x":4.25, "y":1}, {"label":"G", "x":5.25, "y":1}, {"label":"H", "x":6.25, "y":1}, {"label":"J", "x":7.25, "y":1}, {"label":"K", "x":8.25, "y":1}, {"label":"L", "x":9.25, "y":1}, {"label":":", "x":10.25, "y":1}, {"label":"\"", "x":11.25, "y":1}, {"label":"Enter", "x":12.25, "y":1, "w":1.75}, {"x":14, "y":1}, {"x":15, "y":1}, {"label":"Shift", "x":0, "y":2, "w":1.75}, {"label":"Z", "x":1.75, "y":2}, {"label":"X", "x":2.75, "y":2}, {"label":"C", "x":3.75, "y":2}, {"label":"V", "x":4.75, "y":2}, {"label":"B", "x":5.75, "y":2}, {"label":"N", "x":6.75, "y":2}, {"label":"M", "x":7.75, "y":2}, {"label":"<", "x":8.75, "y":2}, {"label":">", "x":9.75, "y":2}, {"label":"?", "x":10.75, "y":2}, {"label":"Shift", "x":11.75, "y":2, "w":1.25}, {"label":"|", "x":13, "y":2}, {"label":"Up", "x":14, "y":2}, {"x":15, "y":2}, {"x":0, "y":3}, {"x":1, "y":3}, {"x":2, "y":3, "w":1.25}, {"x":3.25, "y":3, "w":1.25}, {"x":4.5, "y":3, "w":2.25}, {"x":6.75, "y":3, "w":2.75}, {"x":9.5, "y":3, "w":1.25}, {"x":10.75, "y":3, "w":1.25}, {"x":12, "y":3}, {"label":"Left", "x":13, "y":3}, {"label":"Down", "x":14, "y":3}, {"label":"Right", "x":15, "y":3}]
+			}
+		}
+	}`)
+
+	json.Unmarshal(rawKeyboard, &keyboard)
+
+	type args struct {
+		gistURL string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Keyboard
+		wantErr bool
+	}{
+		{
+			name: "Working Gist",
+			args: args{
+				gistURL: "http://www.keyboard-layout-editor.com/#/gists/7b83b09ae26cd24e4fe372b1c04701b0",
+			},
+			want:    keyboard,
+			wantErr: false,
+		}, {
+			name: "NotWorking",
+			args: args{
+				gistURL: "http://www.keyboard-layout-editor.com/#/gists/7b83b09ae26cd24e4fe372b1c04701b1",
+			},
+			want:    empty,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := KLE2QMKByGist(tt.args.gistURL)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("KLE2QMKByGist() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("KLE2QMKByGist() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

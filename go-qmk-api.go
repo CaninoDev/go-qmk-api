@@ -2,6 +2,7 @@
 package qmk
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -73,7 +74,7 @@ type Mapping struct {
 
 // Layout represent a particular layout mapping and key count
 type Layout struct {
-	KeyCount int       `json:"key_count"`
+	KeyCount int       `json:"key_count,omitempty"`
 	Mapping  []Mapping `json:"layout"`
 }
 
@@ -97,6 +98,7 @@ type Keyboard struct {
 	Maintainer     string            `json:"maintainer"`
 	KeyboardFolder string            `json:"keyboard_folder"`
 	Platform       string            `json:"platform"`
+	KeyboardName   string            `json:"keyboard_name,omitempty"`
 }
 
 // KeyboardsCollection represents information about all keyboards
@@ -469,6 +471,41 @@ func USBTable() (USBInfo, error) {
 }
 
 // POST Endpoints
+
+// KLE2QMKByGist take in keyboard-layout-editor URL of a specific layout and returrns Keyboard in QMK preferred format
+func KLE2QMKByGist(gistURL string) (Keyboard, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "converters", "kle2qmk")
+	contentType := "applcation/json"
+	message := map[string]interface{}{
+		"id": gistURL,
+	}
+	var keyboard Keyboard
+
+	bodyMessage, err := json.Marshal(message)
+	if err != nil {
+		return keyboard, err
+	}
+
+	resp, err := http.Post(queryQMK, contentType, bytes.NewBuffer(bodyMessage))
+	if resp.StatusCode == 500 {
+		return keyboard, errors.New("Invalid URL")
+	}
+
+	if err != nil {
+		return keyboard, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return keyboard, err
+	}
+
+	err = json.Unmarshal(rawJSON, &keyboard)
+
+	return keyboard, nil
+}
+
 // TODO: /v1/converters/kle2qmk
 // TODO: /v1/converters/kle
 // TODO: /v1/compile
