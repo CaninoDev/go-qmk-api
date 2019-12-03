@@ -153,6 +153,7 @@ type errMessage struct {
 	Message string
 }
 
+// GET Endpoints
 // CurrentStatus returns QMK API server status
 func CurrentStatus() (Status, error) {
 	queryQMK := fmt.Sprintf("%s/%s", qmkAPI, version)
@@ -225,9 +226,6 @@ func Converters() ([]string, error) {
 
 	return body, nil
 }
-
-// TODO: /v1/converters/kle2qmk
-// TODO: /v1/converters/kle
 
 // KeyboardsList returns a list of supported keyboards
 func KeyboardsList() ([]string, error) {
@@ -470,6 +468,9 @@ func USBTable() (USBInfo, error) {
 	return usbInfo, err
 }
 
+// POST Endpoints
+// TODO: /v1/converters/kle2qmk
+// TODO: /v1/converters/kle
 // TODO: /v1/compile
 // TODO: /v1/compile/<string:job_id>
 // TODO: /v1/compile/<string:job_id>/download
