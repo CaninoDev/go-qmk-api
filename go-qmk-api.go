@@ -472,23 +472,20 @@ func USBTable() (USBInfo, error) {
 
 // POST Endpoints
 
-// KLE2QMKByGist take in keyboard-layout-editor URL of a specific layout and returrns Keyboard in QMK preferred format
-func KLE2QMKByGist(gistURL string) (Keyboard, error) {
+// KLE2QMK take in a map with 'id' or 'raw' ('raw' is not working at the moment) key and corresponding value and returrns Keyboard in QMK preferred format
+func KLE2QMK(kleMap map[string]string) (Keyboard, error) {
 	queryQMK := fmt.Sprintf("%s/%s/%s/%s", qmkAPI, version, "converters", "kle2qmk")
-	contentType := "applcation/json"
-	message := map[string]interface{}{
-		"id": gistURL,
-	}
+	contentType := "application/json"
 	var keyboard Keyboard
 
-	bodyMessage, err := json.Marshal(message)
+	bodyMessage, err := json.Marshal(kleMap)
 	if err != nil {
 		return keyboard, err
 	}
 
 	resp, err := http.Post(queryQMK, contentType, bytes.NewBuffer(bodyMessage))
-	if resp.StatusCode == 500 {
-		return keyboard, errors.New("Invalid URL")
+	if resp.StatusCode != 200 {
+		return keyboard, errors.New(resp.Status)
 	}
 
 	if err != nil {

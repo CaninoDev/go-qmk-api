@@ -292,9 +292,13 @@ func TestUSBTable(t *testing.T) {
 	}
 
 }
-func TestKLE2QMKByGist(t *testing.T) {
-	var keyboard Keyboard
+
+func TestKLE2QMK(t *testing.T) {
+	idKLE := map[string]string{
+		"id": "http://www.keyboard-layout-editor.com/#/gists/7b83b09ae26cd24e4fe372b1c04701b0",
+	}
 	var empty Keyboard
+	var keyboard Keyboard
 	rawKeyboard := []byte(`{
 		"keyboard_name": "Condensed San Juan", 
 		"url": "", 
@@ -311,8 +315,9 @@ func TestKLE2QMKByGist(t *testing.T) {
 	json.Unmarshal(rawKeyboard, &keyboard)
 
 	type args struct {
-		gistURL string
+		kleMap map[string]string
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -320,16 +325,16 @@ func TestKLE2QMKByGist(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Working Gist",
+			name: "GistURL",
 			args: args{
-				gistURL: "http://www.keyboard-layout-editor.com/#/gists/7b83b09ae26cd24e4fe372b1c04701b0",
+				kleMap: idKLE,
 			},
 			want:    keyboard,
 			wantErr: false,
 		}, {
 			name: "NotWorking",
 			args: args{
-				gistURL: "http://www.keyboard-layout-editor.com/#/gists/7b83b09ae26cd24e4fe372b1c04701b1",
+				kleMap: map[string]string{"nip": "WHors"},
 			},
 			want:    empty,
 			wantErr: true,
@@ -337,13 +342,13 @@ func TestKLE2QMKByGist(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := KLE2QMKByGist(tt.args.gistURL)
+			got, err := KLE2QMK(tt.args.kleMap)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("KLE2QMKByGist() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("KLE2QMK() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("KLE2QMKByGist() = %v, want %v", got, tt.want)
+				t.Errorf("KLE2QMK() = %v, want %v", got, tt.want)
 			}
 		})
 	}
