@@ -136,6 +136,19 @@ type ErrorLog struct {
 	Severity string
 }
 
+// USBInfo represents the Product's hex designation
+type USBInfo map[string]map[string]map[string]ProductInfo
+
+// ProductInfo represents the product info as returned by the /api/v1/usb endpoint
+type ProductInfo struct {
+	Description   string
+	Keyboard      string
+	Vendor        string `json:"vendor_id"`
+	Manufacturer  string
+	ProductID     string `json:"product_id"`
+	DeviceVersion string `json:"device_ver"`
+}
+
 type errMessage struct {
 	Message string
 }
@@ -436,8 +449,27 @@ func ErrorLogs() ([]ErrorLog, error) {
 	return errorLogs, err
 }
 
-// TODO: /v1/keyboards/error_log
-// TODO: /v1/usb
+// USBTable returns a VendorID lookup hash
+func USBTable() (USBInfo, error) {
+	queryQMK := fmt.Sprintf("%s/%s/%s", qmkAPI, version, "usb")
+	var usbInfo USBInfo
+
+	resp, err := http.Get(queryQMK)
+	if err != nil {
+		return usbInfo, err
+	}
+	defer resp.Body.Close()
+
+	rawJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return usbInfo, err
+	}
+
+	err = json.Unmarshal(rawJSON, &usbInfo)
+
+	return usbInfo, err
+}
+
 // TODO: /v1/compile
 // TODO: /v1/compile/<string:job_id>
 // TODO: /v1/compile/<string:job_id>/download

@@ -279,3 +279,16 @@ func TestErrorLogs(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestUSBTable(t *testing.T) {
+	i, err := USBTable()
+
+	if reflect.TypeOf(i) != reflect.TypeOf(USBInfo{}) {
+		t.Errorf("Got %s, wants %s", reflect.TypeOf(i), reflect.TypeOf(USBInfo{}))
+	}
+
+	if err != nil {
+		t.Error(err)
+	}
+
+}
