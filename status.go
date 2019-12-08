@@ -33,11 +33,6 @@ type KeyboardLog struct {
 	Message    string `json:"message"`
 }
 
-type APIError struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-}
-
 // CurrentStatus returns QMK API server status
 func (c *Client) CurrentStatus() (Status, error) {
 	var status Status

@@ -61,8 +61,12 @@ func (c *Client) newRequest(method, endpoint string, reqType interface{}, body i
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-
-	req.Header.Set("Accept", "application/json")
+	switch reqType.(type) {
+	case []byte:
+		req.Header.Set("Accept", "application/text")
+	default:
+		req.Header.Set("Accept", "application/json")
+	}
 
 	resp, err := c.do(req, &reqType)
 	return resp, err
