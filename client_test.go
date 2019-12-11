@@ -13,10 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-const (
-	defTimeOut = time.Second * 2
-)
-
 // Json/XML-tagged model struct
 type FakeModel struct {
 	Text          string  `json:"text,omitempty"`
@@ -25,18 +21,17 @@ type FakeModel struct {
 }
 
 func createNewTestDefClient() *Client {
-	defClient := &http.Client{
-		Timeout: time.Second * 2,
-	}
-	baseURL, _ := url.Parse(defaultBaseURL + "/" + apiVersion)
-	return &Client{
-		defClient,
+	baseURL, _ := url.Parse("https://api.qmk.fm")
+	httpClient := &http.Client{}
+	defClient := &Client{
+		httpClient,
 		baseURL,
 	}
+	return defClient
 }
 
 func createNewCustomClient(customClient *http.Client) *Client {
-	baseURL, _ := url.Parse(defaultBaseURL + "/" + apiVersion)
+	baseURL, _ := url.Parse(`http://www.example.com`)
 	return &Client{
 		customClient,
 		baseURL,
@@ -58,19 +53,37 @@ func testServer() (*http.Client, *http.ServeMux, *httptest.Server) {
 	return client, mux, server
 }
 
+// createEndpoint createsthbetest server with the specified endpoint and expected response
+func createEndpoint(endpoint, response string) (*http.Client, *httptest.Server) {
+	client, mux, server := testServer()
+	mux.HandleFunc(endpoint, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, response)
+	})
+	return client, server
+}
+
 func TestNew(t *testing.T) {
-	defhttpClient := createNewTestDefClient()
-	testingDefClient := New(nil)
-	if reflect.DeepEqual(testingDefClient, defhttpClient) {
-		t.Errorf("expected %v, got %v", defhttpClient, testingDefClient)
+	wantDefClient := createNewTestDefClient()
+	gotDefClient := New(nil)
+	if !cmp.Equal(wantDefClient.Client, gotDefClient.Client) {
+		t.Errorf("expected default %v to equal default %v", wantDefClient, gotDefClient)
 	}
-	customhttpClient := &http.Client{
+
+	wanthttpClient := &http.Client{
 		Timeout: time.Second * 4,
 	}
-	customClient := createNewCustomClient(customhttpClient)
-	testingCustomClient := New(customhttpClient)
-	if testingCustomClient != customClient {
-		t.Errorf("expected %v, got %v", customClient, testingCustomClient)
+	wantBaseURL, _ := url.Parse(defaultBaseURL)
+
+	wantCustomClient := &Client{
+		wanthttpClient,
+		wantBaseURL,
+	}
+
+	gotCustomClient := New(wanthttpClient)
+
+	if gotCustomClient != wantCustomClient {
+		t.Errorf("expected %v, got %v", wantCustomClient, gotCustomClient)
 	}
 }
 
@@ -93,12 +106,8 @@ func TestClient_do(t *testing.T) {
 	const expectedText = "text"
 	const expectedFavoriteCount int64 = 24
 
-	client, mux, server := testServer()
+	client, server := createEndpoint("/success", `{"text": "text", "favorite_count": 24}`)
 	defer server.Close()
-	mux.HandleFunc("/success", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"text": "text", "favorite_count": 24}`)
-	})
 
 	testClient := createNewCustomClient(client)
 	req, _ := http.NewRequest("GET", "http://example.com/success", nil)

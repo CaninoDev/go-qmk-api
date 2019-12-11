@@ -1,6 +1,10 @@
 package qmk
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+)
 
 // Mapping represent a key's coordinate and orientation on the board's matrix
 type Mapping struct {
@@ -80,12 +84,20 @@ func (c *Client) KeyboardData(keyboardName string) (Keyboard, error) {
 }
 
 // KeyboardReadme returns a specified keyboard's readme
-func (c *Client) KeyboardReadme(keyboardName string) ([]byte, error) {
-	var readme []byte
+func (c *Client) KeyboardReadme(keyboardName string) (string, error) {
+	var readme string
 
 	endPointURL := fmt.Sprintf("/keyboards/%s/%s", keyboardName, "readme")
-	_, err := c.newRequest("GET", endPointURL, &readme, nil)
+	resp, err := c.newRequest("GET", endPointURL, nil, nil)
 
+	if resp.Body != nil {
+		responseBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return readme, err
+		}
+		readme = string(responseBody)
+		return readme, nil
+	}
 	return readme, err
 }
 
@@ -99,10 +111,16 @@ func (c *Client) KeymapData(keyboardName string, keymapName string) (Keymap, err
 }
 
 // KeymapReadme returns a specified keyboard's keymap's readme
-func (c *Client) KeymapReadme(keyboardName string, keymapName string) ([]byte, error) {
-	var readme []byte
+func (c *Client) KeymapReadme(keyboardName string, keymapName string) (string, error) {
 
 	endpointURL := fmt.Sprintf("/keyboards/%s/keymaps/%s/readme", keyboardName, keymapName)
-	_, err := c.newRequest("GET", endpointURL, &readme, nil)
-	return readme, err
+	resp, err := c.newRequest("GET", endpointURL, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	readme := buf.String()
+	return readme, nil
+
 }

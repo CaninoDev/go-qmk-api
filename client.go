@@ -8,14 +8,12 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"time"
 )
 
 const (
 	defaultBaseURL   = "https://api.qmk.fm"
 	apiVersion       = "v1"
 	defaultMediaType = "application/json"
-	defaultTimeOut   = time.Second * 2
 )
 
 // Client holds information about the API that will be consume and contain a reference to http.Client used to make request to the API
@@ -27,9 +25,7 @@ type Client struct {
 // New constructs a new Client embedding with the user supplied http.Client. If none are provided, sane defaults are used. Returns an initialized Client.
 func New(httpClient *http.Client) *Client {
 	if httpClient == nil {
-		httpClient = &http.Client{
-			Timeout: defaultTimeOut,
-		}
+		httpClient = &http.Client{}
 	}
 
 	baseURL, _ := url.Parse(defaultBaseURL)
@@ -58,15 +54,21 @@ func (c *Client) newRequest(method, endpoint string, reqType interface{}, body i
 		return nil, err
 	}
 
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
+	if reqType == nil {
+		req.Header.Set("Accept", "text/plain")
+		resp, err := c.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		// Don't try to decode on 204s
+		if resp.StatusCode == http.StatusNoContent {
+			return resp, nil
+		}
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			return resp, nil
+		}
 	}
-	switch reqType.(type) {
-	case []byte:
-		req.Header.Set("Accept", "application/text")
-	default:
-		req.Header.Set("Accept", "application/json")
-	}
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.do(req, &reqType)
 	return resp, err
