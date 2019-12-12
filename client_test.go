@@ -1,7 +1,6 @@
 package qmk
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -70,36 +69,38 @@ func TestNew(t *testing.T) {
 		t.Errorf("expected default %v to equal default %v", wantDefClient, gotDefClient)
 	}
 
-	wanthttpClient := &http.Client{
+	wantHttpClient := &http.Client{
 		Timeout: time.Second * 4,
 	}
-	wantBaseURL, _ := url.Parse(defaultBaseURL)
 
-	wantCustomClient := &Client{
-		wanthttpClient,
-		wantBaseURL,
-	}
+	gotCustomClient := New(wantHttpClient)
 
-	gotCustomClient := New(wanthttpClient)
-
-	if gotCustomClient != wantCustomClient {
-		t.Errorf("expected %v, got %v", wantCustomClient, gotCustomClient)
+	if gotCustomClient.Timeout != wantHttpClient.Timeout {
+		t.Errorf("expected %d, got %d", wantHttpClient.Timeout, gotCustomClient.Timeout)
 	}
 }
 
 func TestClient_newRequest(t *testing.T) {
-	rawPlaidKeyboard := []byte(`{"last_updated":"2019-12-07 12:26:33 UTC","git_hash":"f275ffbdfc1cbd1965cd3546b45a7838012321da","keyboards":{"plaid":{"height":4,"width":12,"description":"12x4 ortholinear keyboard with through hole components","keyboard_folder":"plaid","device_ver":"0x0002","manufacturer":"dm9records","processor":"atmega328p","identifier":"0x16C0:0x27DB:0x0002","product_id":"0x27DB","readme":true,"maintainer":"hsgw","vendor_id":"0x16C0","platform":"unknown","bootloader":"USBasp","keyboard_name":"Plaid // Through Hole","processor_type":"avr","keymaps":["thehalfdeafchef","brickbots","default"],"url":"https://github.com/hsgw/plaid","layouts":{"LAYOUT_plaid_grid":{"key_count":48,"layout":[{"x":0,"w":1,"y":0},{"x":1,"w":1,"y":0},{"x":2,"w":1,"y":0},{"x":3,"w":1,"y":0},{"x":4,"w":1,"y":0},{"x":5,"w":1,"y":0},{"x":6,"w":1,"y":0},{"x":7,"w":1,"y":0},{"x":8,"w":1,"y":0},{"x":9,"w":1,"y":0},{"x":10,"w":1,"y":0},{"x":11,"w":1,"y":0},{"x":0,"w":1,"y":1},{"x":1,"w":1,"y":1},{"x":2,"w":1,"y":1},{"x":3,"w":1,"y":1},{"x":4,"w":1,"y":1},{"x":5,"w":1,"y":1},{"x":6,"w":1,"y":1},{"x":7,"w":1,"y":1},{"x":8,"w":1,"y":1},{"x":9,"w":1,"y":1},{"x":10,"w":1,"y":1},{"x":11,"w":1,"y":1},{"x":0,"w":1,"y":2},{"x":1,"w":1,"y":2},{"x":2,"w":1,"y":2},{"x":3,"w":1,"y":2},{"x":4,"w":1,"y":2},{"x":5,"w":1,"y":2},{"x":6,"w":1,"y":2},{"x":7,"w":1,"y":2},{"x":8,"w":1,"y":2},{"x":9,"w":1,"y":2},{"x":10,"w":1,"y":2},{"x":11,"w":1,"y":2},{"x":0,"w":1,"y":3},{"x":1,"w":1,"y":3},{"x":2,"w":1,"y":3},{"x":3,"w":1,"y":3},{"x":4,"w":1,"y":3},{"x":5,"w":1,"y":3},{"x":6,"w":1,"y":3},{"x":7,"w":1,"y":3},{"x":8,"w":1,"y":3},{"x":9,"w":1,"y":3},{"x":10,"w":1,"y":3},{"x":11,"w":1,"y":3}]},"LAYOUT_ortho_4x12":{"key_count":48,"layout":[{"x":0,"w":1,"y":0},{"x":1,"w":1,"y":0},{"x":2,"w":1,"y":0},{"x":3,"w":1,"y":0},{"x":4,"w":1,"y":0},{"x":5,"w":1,"y":0},{"x":6,"w":1,"y":0},{"x":7,"w":1,"y":0},{"x":8,"w":1,"y":0},{"x":9,"w":1,"y":0},{"x":10,"w":1,"y":0},{"x":11,"w":1,"y":0},{"x":0,"w":1,"y":1},{"x":1,"w":1,"y":1},{"x":2,"w":1,"y":1},{"x":3,"w":1,"y":1},{"x":4,"w":1,"y":1},{"x":5,"w":1,"y":1},{"x":6,"w":1,"y":1},{"x":7,"w":1,"y":1},{"x":8,"w":1,"y":1},{"x":9,"w":1,"y":1},{"x":10,"w":1,"y":1},{"x":11,"w":1,"y":1},{"x":0,"w":1,"y":2},{"x":1,"w":1,"y":2},{"x":2,"w":1,"y":2},{"x":3,"w":1,"y":2},{"x":4,"w":1,"y":2},{"x":5,"w":1,"y":2},{"x":6,"w":1,"y":2},{"x":7,"w":1,"y":2},{"x":8,"w":1,"y":2},{"x":9,"w":1,"y":2},{"x":10,"w":1,"y":2},{"x":11,"w":1,"y":2},{"x":0,"w":1,"y":3},{"x":1,"w":1,"y":3},{"x":2,"w":1,"y":3},{"x":3,"w":1,"y":3},{"x":4,"w":1,"y":3},{"x":5,"w":1,"y":3},{"x":6,"w":1,"y":3},{"x":7,"w":1,"y":3},{"x":8,"w":1,"y":3},{"x":9,"w":1,"y":3},{"x":10,"w":1,"y":3},{"x":11,"w":1,"y":3}]},"LAYOUT_plaid_mit":{"key_count":47,"layout":[{"x":0,"w":1,"y":0},{"x":1,"w":1,"y":0},{"x":2,"w":1,"y":0},{"x":3,"w":1,"y":0},{"x":4,"w":1,"y":0},{"x":5,"w":1,"y":0},{"x":6,"w":1,"y":0},{"x":7,"w":1,"y":0},{"x":8,"w":1,"y":0},{"x":9,"w":1,"y":0},{"x":10,"w":1,"y":0},{"x":11,"w":1,"y":0},{"x":0,"w":1,"y":1},{"x":1,"w":1,"y":1},{"x":2,"w":1,"y":1},{"x":3,"w":1,"y":1},{"x":4,"w":1,"y":1},{"x":5,"w":1,"y":1},{"x":6,"w":1,"y":1},{"x":7,"w":1,"y":1},{"x":8,"w":1,"y":1},{"x":9,"w":1,"y":1},{"x":10,"w":1,"y":1},{"x":11,"w":1,"y":1},{"x":0,"w":1,"y":2},{"x":1,"w":1,"y":2},{"x":2,"w":1,"y":2},{"x":3,"w":1,"y":2},{"x":4,"w":1,"y":2},{"x":5,"w":1,"y":2},{"x":6,"w":1,"y":2},{"x":7,"w":1,"y":2},{"x":8,"w":1,"y":2},{"x":9,"w":1,"y":2},{"x":10,"w":1,"y":2},{"x":11,"w":1,"y":2},{"x":0,"w":1,"y":3},{"x":1,"w":1,"y":3},{"x":2,"w":1,"y":3},{"x":3,"w":1,"y":3},{"x":4,"w":1,"y":3},{"x":5,"w":2,"y":3},{"x":7,"w":1,"y":3},{"x":8,"w":1,"y":3},{"x":9,"w":1,"y":3},{"x":10,"w":1,"y":3},{"x":11,"w":1,"y":3}]},"LAYOUT_planck_mit":{"key_count":47,"layout":[{"x":0,"w":1,"y":0},{"x":1,"w":1,"y":0},{"x":2,"w":1,"y":0},{"x":3,"w":1,"y":0},{"x":4,"w":1,"y":0},{"x":5,"w":1,"y":0},{"x":6,"w":1,"y":0},{"x":7,"w":1,"y":0},{"x":8,"w":1,"y":0},{"x":9,"w":1,"y":0},{"x":10,"w":1,"y":0},{"x":11,"w":1,"y":0},{"x":0,"w":1,"y":1},{"x":1,"w":1,"y":1},{"x":2,"w":1,"y":1},{"x":3,"w":1,"y":1},{"x":4,"w":1,"y":1},{"x":5,"w":1,"y":1},{"x":6,"w":1,"y":1},{"x":7,"w":1,"y":1},{"x":8,"w":1,"y":1},{"x":9,"w":1,"y":1},{"x":10,"w":1,"y":1},{"x":11,"w":1,"y":1},{"x":0,"w":1,"y":2},{"x":1,"w":1,"y":2},{"x":2,"w":1,"y":2},{"x":3,"w":1,"y":2},{"x":4,"w":1,"y":2},{"x":5,"w":1,"y":2},{"x":6,"w":1,"y":2},{"x":7,"w":1,"y":2},{"x":8,"w":1,"y":2},{"x":9,"w":1,"y":2},{"x":10,"w":1,"y":2},{"x":11,"w":1,"y":2},{"x":0,"w":1,"y":3},{"x":1,"w":1,"y":3},{"x":2,"w":1,"y":3},{"x":3,"w":1,"y":3},{"x":4,"w":1,"y":3},{"x":5,"w":2,"y":3},{"x":7,"w":1,"y":3},{"x":8,"w":1,"y":3},{"x":9,"w":1,"y":3},{"x":10,"w":1,"y":3},{"x":11,"w":1,"y":3}]},"KEYMAP":{"key_count":48,"layout":[{"x":0,"w":1,"y":0},{"x":1,"w":1,"y":0},{"x":2,"w":1,"y":0},{"x":3,"w":1,"y":0},{"x":4,"w":1,"y":0},{"x":5,"w":1,"y":0},{"x":6,"w":1,"y":0},{"x":7,"w":1,"y":0},{"x":8,"w":1,"y":0},{"x":9,"w":1,"y":0},{"x":10,"w":1,"y":0},{"x":11,"w":1,"y":0},{"x":0,"w":1,"y":1},{"x":1,"w":1,"y":1},{"x":2,"w":1,"y":1},{"x":3,"w":1,"y":1},{"x":4,"w":1,"y":1},{"x":5,"w":1,"y":1},{"x":6,"w":1,"y":1},{"x":7,"w":1,"y":1},{"x":8,"w":1,"y":1},{"x":9,"w":1,"y":1},{"x":10,"w":1,"y":1},{"x":11,"w":1,"y":1},{"x":0,"w":1,"y":2},{"x":1,"w":1,"y":2},{"x":2,"w":1,"y":2},{"x":3,"w":1,"y":2},{"x":4,"w":1,"y":2},{"x":5,"w":1,"y":2},{"x":6,"w":1,"y":2},{"x":7,"w":1,"y":2},{"x":8,"w":1,"y":2},{"x":9,"w":1,"y":2},{"x":10,"w":1,"y":2},{"x":11,"w":1,"y":2},{"x":0,"w":1,"y":3},{"x":1,"w":1,"y":3},{"x":2,"w":1,"y":3},{"x":3,"w":1,"y":3},{"x":4,"w":1,"y":3},{"x":5,"w":1,"y":3},{"x":6,"w":1,"y":3},{"x":7,"w":1,"y":3},{"x":8,"w":1,"y":3},{"x":9,"w":1,"y":3},{"x":10,"w":1,"y":3},{"x":11,"w":1,"y":3}]}}}}}`)
-	var plaidKeyboard, testingKeyboard Keyboard
-	_ = json.Unmarshal(rawPlaidKeyboard, &plaidKeyboard)
-	dclient := createNewTestDefClient()
-	testingResponse, err := dclient.newRequest("GET", "keyboards/plaid", &testingKeyboard, nil)
+	client, server := createEndpoint("/goodEndpoint", `{"text": "text", "favorite_count": 22}`)
+	defer server.Close()
+
+	testClient := createNewCustomClient(client)
+
+	testModel := &FakeModel{}
+
+	_, err := testClient.newRequest("GET", "/goodEndpoint", &testModel, nil)
 	if err != nil {
-		t.Errorf("got %s", err)
+		t.Errorf("got error: %s", err)
 	}
-	if !cmp.Equal(testingKeyboard, plaidKeyboard) {
-		t.Errorf("expected %v, got %v", plaidKeyboard, testingKeyboard)
+	if testModel.FavoriteCount != 22 {
+		t.Errorf("got %d, expected true", testModel.FavoriteCount)
 	}
-	fmt.Print(testingResponse.Body)
+	_, err = testClient.newRequest("GET", "/badEndpoint", &testModel, nil)
+	if err == nil {
+		t.Error("expected error")
+
+	}
+
 }
 
 func TestClient_do(t *testing.T) {
